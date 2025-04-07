@@ -15,11 +15,10 @@ GPIO.setup(GPIO_PIN_DIR_DROITE, GPIO.OUT)
 
 #Flask
 app = Flask(__name__)
+from flask_cors import CORS
+CORS(app)
 
 #Flask page d'accueil
-@app.route('/')
-def index():
-    return render_template('index.html')
  
  #Flask moteurs
 @app.route('/motor', methods=['POST'])
@@ -54,6 +53,3 @@ def control_vit_dir_motor():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
-
-
-
