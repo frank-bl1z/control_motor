@@ -19,27 +19,30 @@ from flask_cors import CORS
 CORS(app)
 
 #Flask page d'accueil
- 
+class Motors:
+    def __init__(self, isDirGauche, isDirDroite, isVitGauche, isVitDroite):
+        self.isDirGOn = isDirGauche
+        self.isDirDOn = isDirDroite
+        self.isVitGOn = isVitGauche
+        self.isVitDOn = isVitDroite
  #Flask moteurs
 @app.route('/motor', methods=['POST'])
 def control_vit_dir_motor():
-        isDirGaucheOn = request.json['isDirGaucheOn']
-        isDirDroiteOn = request.json['isDirDroiteOn']
-        isVitGaucheOn = request.json['isVitGaucheOn']
-        isVitDroiteOn = request.json['isVitDroiteOn']
-        if isDirGaucheOn:
+        print(request.json)
+        moteur = Motors(request.json['isDirGaucheOn'], request.json['isDirDroiteOn'], request.json['isVitGaucheOn'], request.json['isVitDroiteOn'])
+        if moteur.isDirGOn:
             GPIO.output(GPIO_PIN_DIR_GAUCHE, GPIO.HIGH)
         else:
              GPIO.output(GPIO_PIN_DIR_GAUCHE, GPIO.LOW)
-        if isDirDroiteOn:
+        if moteur.isDirDOn:
             GPIO.output(GPIO_PIN_DIR_DROITE, GPIO.HIGH)
         else:
              GPIO.output(GPIO_PIN_DIR_DROITE, GPIO.LOW)
-        if isVitGaucheOn:
+        if moteur.isVitGOn:
             GPIO.output(GPIO_PIN_VIT_GAUCHE, GPIO.HIGH)
         else:
              GPIO.output(GPIO_PIN_VIT_GAUCHE, GPIO.LOW)
-        if isVitDroiteOn:
+        if moteur.isVitDOn:
             GPIO.output(GPIO_PIN_VIT_DROITE, GPIO.HIGH)
         else:
              GPIO.output(GPIO_PIN_VIT_DROITE, GPIO.LOW)
