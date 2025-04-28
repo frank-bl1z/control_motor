@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import time
+import json  # For controlling the motors with JSON
 
 # --------------------- Setup HSV Trackbars ---------------------
 def setup_hsv_trackbars():
@@ -51,8 +52,6 @@ def filter_contours(contours):
 
     return [best_circle] if best_circle else []
 
-
-
 # --------------------- Ball Detection ---------------------
 def detect_orange_ball_on_frame(frame, lower_orange, upper_orange):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -81,6 +80,43 @@ def draw_circles_on_frame(frame, circles):
         cv2.circle(frame, (x, y), r, (0, 255, 0), 2)  # Green outer circle
         cv2.circle(frame, (x, y), 2, (0, 0, 255), 3)  # Red center dot
 
+# --------------------- Control Motors ---------------------
+def control_motors(ball_x, frame_center_x, frame_width):
+    # Calculate the horizontal offset from the center
+    offset = ball_x - frame_center_x
+    
+    # Define a speed scale based on how far the ball is from the center
+    max_offset = frame_width // 4  # Set a threshold for how far the ball can be before correcting
+    speed_scale = 1.0  # You can adjust the scale for more or less sensitivity
+
+    # Create JSON control object
+    motor_control = {
+        'isDirGaucheOn': 'false',
+        'isDirDroiteOn': 'false',
+        'isVitGaucheOn': 'false',
+        'isVitDroiteOn': 'false'
+    }
+
+    # Determine which direction to move
+    if abs(offset) > max_offset:
+        if offset < 0:
+            # Ball is to the left, move right
+            motor_control['isDirGaucheOn'] = 'false'
+            motor_control['isDirDroiteOn'] = 'false'
+            motor_control['isVitGaucheOn'] = 'true'
+            motor_control['isVitDroiteOn'] = 'false'
+        elif offset > 0:
+            # Ball is to the right, move left
+            motor_control['isDirGaucheOn'] = 'false'
+            motor_control['isDirDroiteOn'] = 'true'
+            motor_control['isVitGaucheOn'] = 'false'
+            motor_control['isVitDroiteOn'] = 'true'
+
+    # Convert the motor control dict to a JSON string (or send it to your vehicle's API)
+    motor_control_json = json.dumps(motor_control)
+    print("Motor Control JSON: ", motor_control_json)
+    return motor_control_json
+
 # --------------------- Main Program ---------------------
 def main():
     cap = cv2.VideoCapture(0)
@@ -101,6 +137,17 @@ def main():
 
         draw_frame = frame.copy()
         draw_circles_on_frame(draw_frame, circles)
+
+        # Get the center of the frame
+        frame_center = (frame.shape[1] // 2, frame.shape[0] // 2)
+
+        # Check if the ball is detected
+        if circles:
+            # Get the center of the ball
+            ball_x, ball_y, _ = circles[0]
+
+            # Control the motors to adjust the position of the vehicle
+            motor_control_json = control_motors(ball_x, frame_center[0], frame.shape[1])
 
         # Show windows
         cv2.imshow("Detected Orange Ball", draw_frame)
